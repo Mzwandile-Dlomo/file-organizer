@@ -3,6 +3,8 @@ import shutil
 import json
 import filetype
 from datetime import datetime
+from watchdog.observers import Observer
+from watchdog.events import FileSystemEventHandler
 
 
 def load_rules():
@@ -11,19 +13,19 @@ def load_rules():
         return json.load(file)
 
 def load_undo_log():
-    undo_log_path = os.path.join(os.path.expanduser('~'), '.file_organizer_undo_log.json')
+    undo_log_path = os.path.join(os.path.expanduser('~'), '.undo_log.json')
     if os.path.exists(undo_log_path):
         with open(undo_log_path, 'r') as file:
             return json.load(file)
     return {}
 
 def save_undo_log(undo_log):
-    undo_log_path = os.path.join(os.path.expanduser('~'), '.file_organizer_undo_log.json')
+    undo_log_path = os.path.join(os.path.expanduser('~'), '.undo_log.json')
     with open(undo_log_path, 'w') as file:
         json.dump(undo_log, file)
 
 def log_operation(operation):
-    log_path = os.path.join(os.path.expanduser('~'), 'file_organizer_operation_log.txt')
+    log_path = os.path.join(os.path.expanduser('~'), 'operation_log.txt')
     with open(log_path, 'a') as log_file:
         log_file.write(f"{datetime.now()}: {operation}\n")
 
@@ -91,32 +93,31 @@ def add_custom_rule():
 
     log_operation(f"Added custom rule: {category} - {extensions}")
 
+
+class Watcher(FileSystemEventHandler):
+    def __init__(self, directory, rules):
+        self.directory = directory
+        self.rules = rules
+
+    def on_created(self, event):
+        if not event.is_directory:
+            organize_files(self.directory, self.rules)
+
+
 def main():
-    directory = input("Enter the directory to organize: ")
-    
-    while True:
-        print("\nOptions:")
-        print("1. Organize files")
-        print("2. Undo last operation")
-        print("3. Add custom rule")
-        print("4. Exit")
-        
-        choice = input("Choose an option: ")
-        
-        if choice == '1':
-            rules = load_rules()
-            organize_files(directory, rules)
-            print("Files organized successfully.")
-        elif choice == '2':
-            undo_last_operation(directory)
-            print("Last operation undone.")
-        elif choice == '3':
-            add_custom_rule()
-            print("Custom rule added successfully.")
-        elif choice == '4':
-            break
-        else:
-            print("Invalid option. Please try again.")
+    directory = os.path.join(os.path.expanduser("~"), "Downloads")
+    rules = load_rules()
+    event_handler = Watcher(directory, rules)
+    observer = Observer()
+    observer.schedule(event_handler, directory, recursive=False)
+    observer.start()
+
+    try:
+        while True:
+            pass
+    except KeyboardInterrupt:
+        observer.stop()
+    observer.join()
 
 if __name__ == "__main__":
     main()

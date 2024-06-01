@@ -1,9 +1,24 @@
 # define the package and entry point
 from setuptools import setup, find_packages
+import os
+import subprocess
+
 
 def read_requirements():
     with open('requirements.txt') as req:
         return req.read().splitlines()
+    
+
+def post_install(install):
+    """Post-installation for installation mode."""
+    def run(self):
+        install.run(self)
+        script_path = os.path.join(os.path.dirname(__file__), 'install.sh')
+        # Ensure the script is executable
+        subprocess.call(['chmod', '+x', script_path])
+        # Run the script
+        subprocess.call(['bash', script_path])
+
 
 setup(
     name='file-organizer',
@@ -24,4 +39,7 @@ setup(
     description='A terminal-based file organizer',
     url='https://github.com/Mzwandile-Dlomo/file-organizer',
     license='MIT',
+     cmdclass={
+        'install': post_install,
+    },
 )
