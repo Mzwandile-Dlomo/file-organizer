@@ -14,7 +14,7 @@ After=network.target
 [Service]
 User=$USERNAME
 WorkingDirectory=$WORKING_DIR
-ExecStart=$PYTHON_EXEC $WORKING_DIR/file-organizer/organizer.py
+ExecStart=$PYTHON_EXEC $WORKING_DIR/file_organizer/organizer.py
 Restart=always
 
 [Install]

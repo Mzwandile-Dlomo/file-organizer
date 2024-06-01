@@ -30,12 +30,14 @@ def log_operation(operation):
         log_file.write(f"{datetime.now()}: {operation}\n")
 
 def organize_files(directory, rules):
+    print(f"Organizing files in directory: {directory}")
     undo_log = load_undo_log()
     undo_log['last_operation'] = []
 
     for filename in os.listdir(directory):
         filepath = os.path.join(directory, filename)
         if os.path.isfile(filepath):
+            print(f"Processing file: {filename}")
             kind = filetype.guess(filepath)
             if kind:
                 extension = kind.extension
@@ -53,6 +55,7 @@ def organize_files(directory, rules):
                     shutil.move(filepath, new_filepath)
                     undo_log['last_operation'].append((new_filepath, filepath))
                     log_operation(f"Moved {filename} to {category}")
+                    print(f"Moved {filename} to {category}")
                     moved = True
                     break
 
@@ -98,25 +101,34 @@ class Watcher(FileSystemEventHandler):
     def __init__(self, directory, rules):
         self.directory = directory
         self.rules = rules
+        print(f"Initialized watcher for directory: {self.directory}")
+
 
     def on_created(self, event):
+        print("Attempting")
         if not event.is_directory:
+            print(f"File created: {event.src_path}")
             organize_files(self.directory, self.rules)
 
 
 def main():
     directory = os.path.join(os.path.expanduser("~"), "Downloads")
     rules = load_rules()
+
+    print(f"Starting to watch directory: {directory}")
+    print(directory)
     event_handler = Watcher(directory, rules)
     observer = Observer()
     observer.schedule(event_handler, directory, recursive=False)
-    observer.start()
-
+    
     try:
+        observer.start()
+        print("Observer started")
         while True:
             pass
     except KeyboardInterrupt:
         observer.stop()
+        print("Observer stopped")
     observer.join()
 
 if __name__ == "__main__":

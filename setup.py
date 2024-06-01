@@ -28,11 +28,11 @@ setup(
     install_requires=read_requirements(),
     entry_points={
         'console_scripts': [
-            'file-organizer=file-organizer.organizer:main',
+            'file-organizer=file_organizer.organizer:main',
         ],
     },
     package_data={
-        'file-organizer': ['rules.json'],
+        'file_organizer': ['rules.json'],
     },
     author='Mzwandile Dlomo',
     author_email='world.mjdlomo@gmail.com',
